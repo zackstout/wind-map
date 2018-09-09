@@ -3,7 +3,11 @@ var img, w, h;
 var long_dist_ratio, long_dist_pix;
 var lat_dist_ratio, lat_dist_pix;
 
+let all_wind_data;
 let wind_data;
+
+// Will contain {lat: 40, long: -90} e.g.:
+let already_drawn = [];
 
 // let wind_x = [];
 // let wind_y = [];
@@ -21,10 +25,10 @@ function setup() {
 	createCanvas(w, h);
 	background(200);
 
-	$.get('/data')
+	$.get('/data2')
 	.then(function(res) {
 		console.log(res);
-		wind_data = res;
+		all_wind_data = res;
 
 	})
 	.catch(err => console.log(err));
@@ -88,25 +92,49 @@ function draw() {
 	// fill('green');
 	// ellipse(convertLongToPix(93.3), convertLatToPix(45), 10);
 
-	if (wind_data) {
-		wind_data.forEach(pt => {
-			push();
-			var x_pix = convertLongToPix(- pt.coord.lon);
-			var y_pix = convertLatToPix(pt.coord.lat);
-			// console.log(x_pix, y_pix);
-			rotate(pt.wind.deg * 2 * PI / 360);
-			translate(x_pix, y_pix);
-			line(0, 0, pt.wind.speed * 10, 0);
-
-			pop();
+	if (all_wind_data) {
+		all_wind_data.forEach(p => {
+			// Ignoring duplicates:
+			if (!arrIncludesPoint(already_drawn, p)) {
+				// console.log(p);
+				// ellipse(convertLongToPix(- p.long), convertLatToPix(p.lat), 5);
+				push();
+				translate(convertLongToPix(- p.long), convertLatToPix(p.lat));
+				rotate(p.dir * 2*PI / 360);
+				stroke('green');
+				line(0, 0, p.speed * 3, 0);
+				noStroke();
+				fill('red');
+				ellipse(p.speed * 3, 0, 3);
+				pop();
+			}
 		});
 	}
 
 
 
+
+	// if (wind_data) {
+	// 	wind_data.forEach(pt => {
+	// 		push();
+	// 		var x_pix = convertLongToPix(- pt.coord.lon);
+	// 		var y_pix = convertLatToPix(pt.coord.lat);
+	// 		// console.log(x_pix, y_pix);
+	// 		rotate(pt.wind.deg * 2 * PI / 360);
+	// 		translate(x_pix, y_pix);
+	// 		line(0, 0, pt.wind.speed * 10, 0);
+	//
+	// 		pop();
+	// 	});
+	// }
+
+
+	// DISPLAY CITIES:
 	// cities.forEach(c => {
 	// 	ellipse(convertLongToPix(-parseFloat(c.lon)), convertLatToPix(c.lat), 5);
 	// });
+
+
 
 	// wind_vals.forEach(v => {
 	// 	if (v.x > 0 && v.y > 0 && v.x_pix % 5 === 0) {
@@ -124,6 +152,12 @@ function draw() {
 	// });
 }
 
+function arrIncludesPoint(arr, p) {
+	for (let i=0; i < arr.length; i++) {
+		if (arr[i].lat == p.lat && arr[i].long == p.long) return true;
+	}
+	return false;
+}
 
 function convertLongToPix(x) {
 	// using 120 degrees (at 95px) as base:
