@@ -6,4 +6,8 @@ The main challenge so far has been grabbing the data. The [Open Weather API](htt
 ## Screenshot
 Making some progress -- here is a crude vector field:
 
-![screen shot 2018-09-09 at 5 16 36 pm](https://user-images.githubusercontent.com/29472568/45269464-8667c400-b454-11e8-821f-ab39df3c11fa.png)
+![screen shot 2018-09-09 at 6 53 42 pm](https://user-images.githubusercontent.com/29472568/45270312-c71a0a00-b461-11e8-816e-9c191ff51457.png)
+
+And here's what we're imitating -- we seem to be on the right track:
+
+![screen shot 2018-09-09 at 6 53 57 pm](https://user-images.githubusercontent.com/29472568/45270313-c7b2a080-b461-11e8-8cf2-b1fa09f4c8f8.png)

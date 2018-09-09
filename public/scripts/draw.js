@@ -32,14 +32,14 @@ function draw() {
 	strokeWeight(1);
 
 	// LONGITUDE:
-	line(95, 0, 95, h);
-	line(720, 0, 720, h);
+	// line(95, 0, 95, h);
+	// line(720, 0, 720, h);
 	long_dist_pix = 720 - 95; // found by experiment
 	long_dist_ratio = long_dist_pix / 50; // 50 degrees of longitude
 
 	// LATITUDE:
-	line(0, 15, w, 15);
-	line(0, 365, w, 365);
+	// line(0, 15, w, 15);
+	// line(0, 365, w, 365);
 	lat_dist_pix = 365 - 15;
 	lat_dist_ratio = lat_dist_pix / 20; // 20 degree difference
 
