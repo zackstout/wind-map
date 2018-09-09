@@ -1,58 +1,30 @@
 
 const express = require('express');
 const app = express();
-const PORT = 8008;
+const PORT = 8080;
 const axios = require('axios');
-
 const PromisePool = require('es6-promise-pool');
-
 const dotenv = require('dotenv').config();
 const api_key = process.env.API_KEY;
-
-var mongoose = require('mongoose');
-var databaseUrl = '';
-var db = require('./models');
-
-if (process.env.MONGODB_URI) {
-  databaseUrl = process.env.MONGODB_URI;
-} else {
-  databaseUrl = 'mongodb://localhost:27017/wind';
-}
-
-mongoose.connection.on('connected', function() {
-  console.log('we in!');
-});
-
-mongoose.connection.on('error', function() {
-  console.log("aw nuts bro");
-});
-
-//initiate connection:
-mongoose.connect(databaseUrl);
+const mongoose = require('mongoose');
+const connection = require('./modules/connection');
+const db = require('./models');
 
 
-
-
-// Will probably have to save these in a DB instead of waiting to send back a response:
-// let all_wind_data = [];
-
-// Helper function:
+// Helper function for (slooooowly) pinging Open Weather API:
 var delayValue = function (value, time) {
 
   return new Promise(function (resolve, reject) {
-    // console.log('Resolving ' + value + ' in ' + time + ' ms');
     setTimeout(function () {
-      const long = 70 + Math.floor(value / 20) * 2;
+      const long = 70 + Math.floor(value / 20); // We had a *2 here. Was source of duplicate data problem. Now we're going cell by cell.
       const lat = 30 + value % 20;
       console.log('Resolving: ' + value, long, lat);
 
       axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=-${long}&APPID=${api_key}`)
       .then(function(data) {
-        // all_wind_data.push({coord: data.data.coord, wind: data.data.wind});
 
-        // Seems to be creating too many: should probably check whether exists before creating.
-        // Strange -- we got exactly 3 times more than expected!
-        db.Wind.create({
+        // The golden ticket! Wind4:
+        db.Wind4.create({
           lat: data.data.coord.lat,
           long: data.data.coord.lon,
           speed: data.data.wind.speed,
@@ -63,16 +35,20 @@ var delayValue = function (value, time) {
 
         console.log('resolved...', data.data.wind);
         resolve(data);
+      }).catch(err => {
+        console.log(err);
+        reject();
       });
-      // resolve(value);
+
     }, time);
+
   });
 };
 
 
-
+// Grab data from database to draw to the map:
 app.get('/data2', function(req, res) {
-  db.Wind.find({})
+  db.Wind4.find({})
     .then(function(data) {
       res.send(data);
     })
@@ -83,13 +59,15 @@ app.get('/data2', function(req, res) {
 });
 
 
+// Initiate process of grabbing data from Open Weather API:
+// NOTE: Will take 10 - 20 minutes:
 app.get('/data', function(req, res) {
-
-  // Cool! JS Generators:
+  // Cool! JS generators:
   const generatePromises = function * () {
-    for (let count = 1; count <= 260; count++) {
-      // delayValue(count, 1000).then(d => console.log("d for count ", count, " is ", d));
-      yield delayValue(count, 15000);
+    // We'll want to go up to 1000 to get it all: it's a 20 x 50 grid.
+    // We can probably go a bit faster too. (Was at 15000, pushing down to 8000)
+    for (let count = 1; count <= 1000; count++) {
+      yield delayValue(count, 8000); // Every 8 seconds, add 5 more to pool. So we should not exceed 60/minute.
     }
   };
 
@@ -100,65 +78,14 @@ app.get('/data', function(req, res) {
   pool.start()
   .then(() => {
     console.log('Complete');
-    // res.send(all_wind_data);
-
-    // axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=45&lon=-90&APPID=${api_key}`)
-    // .then(function(result) {
-    //   console.log("RESULT IS...", result);
-    //   res.send(result);
-    //
-    // })
-    // .catch(function(err) {
-    //   console.log(err);
-    //   res.sendStatus(500);
-    // });
-
   });
 
   res.sendStatus(200);
-
-
-
-
-  // We want to range from 120 to 70 lon, and 30 to 50 lat:
-  // Let's start with range of 5:
-  // let promises = [];
-  // const range = 5;
-  //
-  // for (let i=70; i <=120; i+=range) {
-  //   for (let j=30; j <=50; j+=range) {
-  //     promises.push(axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=${j}&lon=-${i}&APPID=${api_key}`));
-  //   }
-  // }
-  //
-  // Promise.all(promises)
-  // .then(data => {
-  //   let result = [];
-  //   // console.log(data);
-  //   data.forEach(data => {
-  //     // console.log(data.data);
-  //     // console.log(data.data.coord);
-  //     // console.log(data.data.wind);
-  //     result.push({
-  //       coord: data.data.coord,
-  //       wind: data.data.wind
-  //     });
-  //
-  //   });
-  //
-  //   res.send(result);
-  //
-  // })
-  // .catch(err => {
-  //   console.log(err);
-  //   res.sendStatus(501);
-  // });
-
 });
 
 
-
 app.use(express.static('public'));
+
 app.listen(PORT, function() {
   console.log('thx for listening on channel ', PORT);
 });

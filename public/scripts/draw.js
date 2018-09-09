@@ -2,22 +2,10 @@
 var img, w, h;
 var long_dist_ratio, long_dist_pix;
 var lat_dist_ratio, lat_dist_pix;
-
 let all_wind_data;
-let wind_data;
-
-// Will contain {lat: 40, long: -90} e.g.:
+// Will contain e.g. {lat: 40, long: -90} -- to handle duplicates:
 let already_drawn = [];
 
-// let wind_x = [];
-// let wind_y = [];
-// let wind_vals = [];
-
-// console.log(windData);
-// they have height 237, width 501. So their data is an array of 237 * 501 * 2 (because they use commas to separate x,y coords of vectors at each point)
-
-// const source_h = 237;
-// const source_w = 501;
 
 function setup() {
 	w = 800;
@@ -33,45 +21,12 @@ function setup() {
 	})
 	.catch(err => console.log(err));
 
-	// Clean up and prepare wind velocity data:
-	// Ok it may have been overly optimistic to assume we could naively interpret this array:
-	// for (let i=0; i < windData.field.length; i++) {
-	// 	if (i % 2 === 0) {
-	// 		wind_x.push(windData.field[i]);
-	// 	}
-	// 	else  {
-	// 		wind_y.push(windData.field[i]);
-	// 	}
-	// }
-	//
-	// for (let i=0; i < wind_x.length; i++) {
-	// 	wind_vals.push({
-	// 		x: wind_x[i],
-	// 		y: wind_y[i]
-	// 	});
-	// }
-	//
-	// for (let i=0; i < wind_vals.length; i++) {
-	// 	wind_vals[i].x_pix = i % source_w;
-	// 	wind_vals[i].y_pix = Math.floor(i / source_w);
-	// }
-
-	// Now we have wind_vals...each pixel is associated with a vector.
-	// We need to find where they determine bounds of grid to in relation to US map..
-	// Also need to figure out whether partitioned by rows or cols.
-	// console.log(wind_vals);
-
-	img = loadImage('us-mercator.png');
+	img = loadImage('images/us-mercator.png');
 }
 
 
-// Great note from source material:
-// The random factor here is designed to ensure that
-	// more particles are placed in slower areas; this makes the
-	// overall distribution appear more even.
-
 function draw() {
-	image(img, 0, 0, img.width/2, img.height/2);
+	image(img, 0, 0, img.width/2, img.height/2); // forget the purpose of this 1/2 -- scaling down to fit screen?
 
 	stroke('blue');
 	strokeWeight(1);
@@ -94,62 +49,31 @@ function draw() {
 
 	if (all_wind_data) {
 		all_wind_data.forEach(p => {
+			const scale_fact = 2.5;
 			// Ignoring duplicates:
 			if (!arrIncludesPoint(already_drawn, p)) {
 				// console.log(p);
 				// ellipse(convertLongToPix(- p.long), convertLatToPix(p.lat), 5);
 				push();
 				translate(convertLongToPix(- p.long), convertLatToPix(p.lat));
-				rotate(p.dir * 2*PI / 360);
+				// We add PI/2 because 0 is DUE EAST instead of DUE NORTH:
+				rotate(PI/2 + p.dir * 2*PI / 360);
 				stroke('green');
-				line(0, 0, p.speed * 3, 0);
+				line(0, 0, p.speed * scale_fact, 0);
 				noStroke();
 				fill('red');
-				ellipse(p.speed * 3, 0, 3);
+				// Shows which way vector is pointing:
+				ellipse(p.speed * scale_fact, 0, 2);
 				pop();
 			}
 		});
 	}
-
-
-
-
-	// if (wind_data) {
-	// 	wind_data.forEach(pt => {
-	// 		push();
-	// 		var x_pix = convertLongToPix(- pt.coord.lon);
-	// 		var y_pix = convertLatToPix(pt.coord.lat);
-	// 		// console.log(x_pix, y_pix);
-	// 		rotate(pt.wind.deg * 2 * PI / 360);
-	// 		translate(x_pix, y_pix);
-	// 		line(0, 0, pt.wind.speed * 10, 0);
-	//
-	// 		pop();
-	// 	});
-	// }
-
 
 	// DISPLAY CITIES:
 	// cities.forEach(c => {
 	// 	ellipse(convertLongToPix(-parseFloat(c.lon)), convertLatToPix(c.lat), 5);
 	// });
 
-
-
-	// wind_vals.forEach(v => {
-	// 	if (v.x > 0 && v.y > 0 && v.x_pix % 5 === 0) {
-	// 		const x_scale = (w - 150) / source_w;
-	// 		const y_scale = (h - 50) / source_h;
-	// 		const x_off = 50;
-	// 		const y_off = 25;
-	// 		stroke('blue');
-	// 		line(x_off + v.x_pix * x_scale, y_off + v.y_pix * y_scale, (v.x_pix + v.x) * x_scale + x_off, (v.y_pix + v.y) * y_scale + y_off);
-	// 		fill('red');
-	// 		noStroke();
-	// 		ellipse((v.x_pix + v.x) * x_scale + x_off, (v.y_pix + v.y) * y_scale + y_off, 2);
-	// 		// line(v.y_pix, v.x_pix, v.y_pix + v.y, v.x_pix + v.x);
-	// 	}
-	// });
 }
 
 function arrIncludesPoint(arr, p) {
