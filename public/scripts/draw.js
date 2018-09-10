@@ -3,9 +3,45 @@ var img, w, h;
 var long_dist_ratio, long_dist_pix;
 var lat_dist_ratio, lat_dist_pix;
 let all_wind_data;
-// Will contain e.g. {lat: 40, long: -90} -- to handle duplicates:
-let already_drawn = [];
 
+var balls = [];
+
+// ================================= BALL CLASS =================================
+
+class Ball {
+	constructor(x, y) {
+		this.x = x;
+		this.y = y;
+		this.deg = 0;
+		this.speed = 0;
+	}
+
+	setVelocity() {
+		const nearest = getNearestPoint(this.x, this.y);
+
+		for (let i=0; i < all_wind_data.length; i++) {
+			const d = all_wind_data[i];
+			if (d.lat == nearest.x && d.long == - nearest.y) {
+				this.deg = d.deg;
+				this.speed = d.speed;
+				break;
+			}
+		}
+	}
+
+	draw() {
+		fill('purple');
+		noStroke();
+		ellipse(this.x, this.y, 6);
+	}
+
+	move() {
+
+	}
+}
+
+
+// ================================= MAIN FUNCTIONS =================================
 
 function setup() {
 	w = 800;
@@ -50,24 +86,26 @@ function draw() {
 	if (all_wind_data) {
 		all_wind_data.forEach(p => {
 			const scale_fact = 2.5;
-			// Ignoring duplicates:
-			if (!arrIncludesPoint(already_drawn, p)) {
-				// console.log(p);
-				// ellipse(convertLongToPix(- p.long), convertLatToPix(p.lat), 5);
-				push();
-				translate(convertLongToPix(- p.long), convertLatToPix(p.lat));
-				// We add PI/2 because 0 is DUE EAST instead of DUE NORTH:
-				rotate(PI/2 + p.dir * 2*PI / 360);
-				stroke('green');
-				line(0, 0, p.speed * scale_fact, 0);
-				noStroke();
-				fill('red');
-				// Shows which way vector is pointing:
-				ellipse(p.speed * scale_fact, 0, 2);
-				pop();
-			}
+
+			push();
+			translate(convertLongToPix(- p.long), convertLatToPix(p.lat));
+			// We add PI/2 because 0 is DUE EAST instead of DUE NORTH:
+			rotate(PI/2 + p.dir * 2*PI / 360);
+			stroke('green');
+			line(0, 0, p.speed * scale_fact, 0);
+			noStroke();
+			fill('red');
+			// Shows which way the vector is pointing:
+			ellipse(p.speed * scale_fact, 0, 2);
+			pop();
 		});
 	}
+
+	balls.forEach(b => {
+	// 	b.setVelocity();
+	// 	b.move();
+		b.draw();
+	})
 
 	// DISPLAY CITIES:
 	// cities.forEach(c => {
@@ -76,13 +114,31 @@ function draw() {
 
 }
 
-function arrIncludesPoint(arr, p) {
-	for (let i=0; i < arr.length; i++) {
-		if (arr[i].lat == p.lat && arr[i].long == p.long) return true;
-	}
-	return false;
+// ================================= HELPER FUNCTIONS =================================
+
+// Get nearest point to a certain location (e.g. mouse clicked point):
+function getNearestPoint(x, y) {
+	const near_x = convertPixToLong(x);
+	const near_y = convertPixToLat(y);
+
+	const nearest_x = (near_x - parseInt(near_x)) > 0.5 ? parseInt(near_x) + 1 : parseInt(near_x);
+	const nearest_y = (near_y - parseInt(near_y)) > 0.5 ? parseInt(near_y) + 1 : parseInt(near_y);
+	return {
+		x: nearest_x,
+		y: nearest_y
+	};
 }
 
+function mousePressed() {
+	// let near_points = [];
+	const nearest = getNearestPoint(mouseX, mouseY);
+	var ball = new Ball(mouseX, mouseY);
+	balls.push(ball);
+
+	console.log(nearest);
+}
+
+// For converting coordinates to pixels:
 function convertLongToPix(x) {
 	// using 120 degrees (at 95px) as base:
 	return 95 + (120 - x) * long_dist_ratio;
@@ -91,4 +147,13 @@ function convertLongToPix(x) {
 function convertLatToPix(x) {
 	// using 50 degrees (at 15px) as base:
 	return 15 + (50 - x) * lat_dist_ratio;
+}
+
+// For converting pixels to coordinates:
+function convertPixToLong(x) {
+	return 120 - (x - 95) / long_dist_ratio;
+}
+
+function convertPixToLat(x) {
+	return 50 - (x - 15) / lat_dist_ratio;
 }
