@@ -12,17 +12,19 @@ class Ball {
 	constructor(x, y) {
 		this.x = x;
 		this.y = y;
-		this.deg = 0;
+		this.dir = 0;
 		this.speed = 0;
 	}
 
 	setVelocity() {
 		const nearest = getNearestPoint(this.x, this.y);
+		// console.log(nearest);
 
 		for (let i=0; i < all_wind_data.length; i++) {
 			const d = all_wind_data[i];
-			if (d.lat == nearest.x && d.long == - nearest.y) {
-				this.deg = d.deg;
+			if (d.lat == nearest.y && d.long == - nearest.x) {
+				// console.log('ahoy');
+				this.dir = d.dir;
 				this.speed = d.speed;
 				break;
 			}
@@ -36,7 +38,11 @@ class Ball {
 	}
 
 	move() {
-
+		const speed_fact = 0.5;
+		// console.log(this.deg, this.speed);
+		this.x += this.speed * speed_fact * cos(PI/2 + this.dir * 2*PI/360);
+		this.y += this.speed * speed_fact * sin(PI/2 + this.dir * 2*PI/360);
+		// console.log(this.x, this.y);
 	}
 }
 
@@ -102,8 +108,8 @@ function draw() {
 	}
 
 	balls.forEach(b => {
-	// 	b.setVelocity();
-	// 	b.move();
+		b.setVelocity();
+		b.move();
 		b.draw();
 	})
 
@@ -129,7 +135,7 @@ function getNearestPoint(x, y) {
 	};
 }
 
-function mousePressed() {
+function mouseDragged() {
 	// let near_points = [];
 	const nearest = getNearestPoint(mouseX, mouseY);
 	var ball = new Ball(mouseX, mouseY);
