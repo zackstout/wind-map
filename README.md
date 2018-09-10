@@ -3,6 +3,8 @@ I thought it would be a fun challenge to try to emulate this gorgeous [animation
 
 The main challenge so far has been grabbing the data. The [Open Weather API](https://openweathermap.org/api) limits free users to 60 requests per minute, so I used `es6-promise-pool` to slowly grab the necessary data and store it in a database.
 
+Having the data, it should be just a matter of determining where to drop new balls, drawing 'ghost paths', deleting balls that have not moved or have left the screen, and then using wind vector at nearest cell to determine each ball's path. The ideas are quite similar to those behind this simple [fluid dynamics](https://github.com/zackstout/vector-fields-general) project of mine.
+
 ## Screenshot
 Making some progress -- here is a crude vector field:
 
