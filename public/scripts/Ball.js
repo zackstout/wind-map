@@ -50,6 +50,7 @@ class Ball {
 
 	move() {
 		const speed_fact = 0.5;
+    // Adding PI/2 because 0 points due EAST instead of NORTH:
 		this.x += this.speed * speed_fact * cos(PI/2 + this.dir * 2*PI/360);
 		this.y += this.speed * speed_fact * sin(PI/2 + this.dir * 2*PI/360);
 	}

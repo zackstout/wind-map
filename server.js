@@ -78,7 +78,8 @@ app.get('/data', function(req, res) {
     // We can probably go a bit faster too. (Was at 15000, pushing down to 8000)
 
     // changing from 1k to 4k:
-    for (let count = 1; count <= 4000; count++) {
+    // We can just change the starting value if data stops coming..
+    for (let count = 3375; count <= 4000; count++) {
       yield delayValue(count, 8000); // Every 8 seconds, add 5 more to pool. So we should not exceed 60/minute.
     }
   };
