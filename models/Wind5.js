@@ -2,7 +2,7 @@
 var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
-var Wind3Schema = new Schema({
+var Wind5Schema = new Schema({
   lat: Number,
   long: Number,
   speed: Number,
@@ -10,4 +10,4 @@ var Wind3Schema = new Schema({
   gust: Number,
 });
 
-module.exports = mongoose.model("Wind3", Wind3Schema);
+module.exports = mongoose.model("Wind5", Wind5Schema);

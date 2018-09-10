@@ -5,63 +5,8 @@ var lat_dist_ratio, lat_dist_pix;
 let all_wind_data;
 
 var balls = [];
+let ghost_balls = [];
 let count = 0;
-
-// ================================= BALL CLASS =================================
-class Ball {
-	constructor(x, y) {
-		this.x = x;
-		this.y = y;
-		this.dir = 0;
-		this.speed = 0;
-	}
-
-	find() {
-		for (let i=0; i < balls.length; i++) {
-			if (balls[i].x === this.x && balls[i].y === this.y) return i;
-		}
-		return null; // yikes!
-	}
-
-	removeOffGrid() {
-		if (this.x < 0 || this.y < 0 || this.x > w || this.y > h) {
-			const ind = this.find();
-			balls.splice(ind, 1);
-		}
-	}
-
-	// Huh, we lost the code. Anyway, it's prob better to loop through cells and find those with multiple balls living at them.
-	removeLazy() {
-		// The trouble with this was we lose too many slowly-moving balls if we delete those with prev_x close to their current x
-	}
-
-	setVelocity() {
-		if (all_wind_data) {
-			const nearest = getNearestPoint(this.x, this.y);
-
-			for (let i=0; i < all_wind_data.length; i++) {
-				const d = all_wind_data[i];
-				if (d.lat == nearest.y && d.long == - nearest.x) {
-					this.dir = d.dir;
-					this.speed = d.speed;
-					break;
-				}
-			}
-		}
-	}
-
-	draw() {
-		fill('purple');
-		noStroke();
-		ellipse(this.x, this.y, 2.5);
-	}
-
-	move() {
-		const speed_fact = 0.5;
-		this.x += this.speed * speed_fact * cos(PI/2 + this.dir * 2*PI/360);
-		this.y += this.speed * speed_fact * sin(PI/2 + this.dir * 2*PI/360);
-	}
-}
 
 // ================================= MAIN FUNCTIONS =================================
 
@@ -87,16 +32,13 @@ function setup() {
 	img = loadImage('images/us-mercator.png');
 
 	// Generate initial balls at every cell:
-	generateBalls();
+	// generateBalls();
 }
 
 
 function draw() {
 	count++;
 
-	// if (count % 100 === 0) {
-	// 	generateBalls();
-	// }
 	image(img, 0, 0, img.width/2, img.height/2); // forget the purpose of this 1/2 -- scaling down to fit screen?
 
 	stroke('blue');
@@ -107,23 +49,27 @@ function draw() {
 	ellipse(convertLongToPix(93.3), convertLatToPix(45), 10);
 
 	// ============ DRAW VECTORS: ============
-	// if (all_wind_data) {
-	// 	all_wind_data.forEach(p => {
-	// 		const scale_fact = 2.5;
-	//
-	// 		push();
-	// 		translate(convertLongToPix(- p.long), convertLatToPix(p.lat));
-	// 		// We add PI/2 because 0 is DUE EAST instead of DUE NORTH:
-	// 		rotate(PI/2 + p.dir * 2*PI / 360);
-	// 		stroke('green');
-	// 		line(0, 0, p.speed * scale_fact, 0);
-	// 		noStroke();
-	// 		fill('red');
-	// 		// Shows which way the vector is pointing:
-	// 		ellipse(p.speed * scale_fact, 0, 2);
-	// 		pop();
-	// 	});
-	// }
+	if (all_wind_data) {
+		all_wind_data.forEach(p => {
+			const scale_fact = 2.5;
+
+			push();
+			translate(convertLongToPix(- p.long), convertLatToPix(p.lat));
+			// We add PI/2 because 0 is DUE EAST instead of DUE NORTH:
+			rotate(PI/2 + p.dir * 2*PI / 360);
+			stroke('green');
+			line(0, 0, p.speed * scale_fact, 0);
+			noStroke();
+			fill('red');
+			// Shows which way the vector is pointing:
+			ellipse(p.speed * scale_fact, 0, 2);
+			pop();
+		});
+	}
+
+
+	// Very crude:
+	balls.push(new Ball(100 + random(600), random(400)));
 
 	// ============ ANIMATE BALLS: ============
 	balls.forEach(b => {
@@ -132,10 +78,23 @@ function draw() {
 		b.move();
 		b.draw();
 
-		// if (count > 10) {
-		// 	b.removeLazy();
-		// }
-	})
+		// Add to ghost path:
+		if (count % 10 === 0) {
+			var ghost = new GhostBall(b.x, b.y);
+			ghost_balls.push(ghost);
+		}
+	});
+
+	// ============ DRAW GHOST PATH: ============
+	ghost_balls.forEach(g => {
+		g.draw();
+		g.life -= 0.02;
+
+		if (g.life < 0) {
+			const ind = g.find();
+			ghost_balls.splice(ind, 1);
+		}
+	});
 
 	// ============ DISPLAY CITIES: ============
 	// cities.forEach(c => {
@@ -168,14 +127,15 @@ function generateBalls() {
 	}
 }
 
+function getDist(a, b) {
+	return Math.pow(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2), 0.5);
+}
+
+// Testing ball-generation and motion:
 function mouseDragged() {
 	const nearest = getNearestPoint(mouseX, mouseY);
 	var ball = new Ball(mouseX, mouseY);
 	balls.push(ball);
-}
-
-function getDist(a, b) {
-	return Math.pow(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2), 0.5);
 }
 
 // For converting coordinates to pixels:

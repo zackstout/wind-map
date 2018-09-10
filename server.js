@@ -15,22 +15,32 @@ const db = require('./models');
 var delayValue = function (value, time) {
 
   return new Promise(function (resolve, reject) {
+
     setTimeout(function () {
-      const long = 70 + Math.floor(value / 20); // We had a *2 here. Was source of duplicate data problem. Now we're going cell by cell.
-      const lat = 30 + value % 20;
+
+      // Adding * 0.5 and changing 20 to 40 as we move from 1000 to 4000:
+      const long = 70 + 0.5 * Math.floor(value / 40); // We had a *2 here. Was source of duplicate data problem. Now we're going cell by cell.
+      const lat = 30 + 0.5 * (value % 40);
       console.log('Resolving: ' + value, long, lat);
 
       axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=-${long}&APPID=${api_key}`)
       .then(function(data) {
 
+        const gust = data.data.wind.gust ? data.data.wind.gust : 0;
+
         // The golden ticket! Wind4:
-        db.Wind4.create({
+
+        // Wind2 has 2000, so about halfway there.
+        db.Wind2.create({
           lat: data.data.coord.lat,
           long: data.data.coord.lon,
           speed: data.data.wind.speed,
-          dir: data.data.wind.deg
+          dir: data.data.wind.deg,
+          gust: gust,
         })
-        .then(data => console.log(data))
+        .then(data => {
+          // console.log(data);
+        })
         .catch(err => console.log(err.message));
 
         console.log('resolved...', data.data.wind);
@@ -48,7 +58,7 @@ var delayValue = function (value, time) {
 
 // Grab data from database to draw to the map:
 app.get('/data2', function(req, res) {
-  db.Wind4.find({})
+  db.Wind2.find({})
     .then(function(data) {
       res.send(data);
     })
@@ -66,7 +76,9 @@ app.get('/data', function(req, res) {
   const generatePromises = function * () {
     // We'll want to go up to 1000 to get it all: it's a 20 x 50 grid.
     // We can probably go a bit faster too. (Was at 15000, pushing down to 8000)
-    for (let count = 1; count <= 1000; count++) {
+
+    // changing from 1k to 4k:
+    for (let count = 1; count <= 4000; count++) {
       yield delayValue(count, 8000); // Every 8 seconds, add 5 more to pool. So we should not exceed 60/minute.
     }
   };
