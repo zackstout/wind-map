@@ -70,24 +70,16 @@ function draw() {
 	// Very crude:
 	// balls.push(new Ball(100 + random(600), random(400)));
 
-
+	// A very crude alternative:
 	if (count % 7 === 0) {
 		generateBalls(3, Math.random() * 50);
 	}
 
-	if (count % 30 === 0) {
-		generateBalls(2, Math.random() * 50 - 100);
-	}
-
-	// if (count % 17 === 0) {
-	// 	generateBalls(2, 3.2);
-	// }
 
 	let temp = [];
 
 	// ============ ANIMATE BALLS: ============
 	balls.forEach(b => {
-		b.removeOffGrid();
 		b.setVelocity();
 		b.move();
 		b.draw();
@@ -95,7 +87,7 @@ function draw() {
 		// Prepare to get rid of too-close balls:
 		let allow = true;
 		temp.forEach(t => {
-			if (getDist(t, b) < 1) allow = false;
+			if (getDist(t, b) < 2) allow = false;
 		});
 		if (allow) temp.push(b);
 
@@ -104,6 +96,8 @@ function draw() {
 			const ghost = new GhostBall(b.x, b.y);
 			ghost_balls.push(ghost);
 		}
+
+		b.removeOffGrid();
 	});
 
 	balls = temp;
@@ -111,8 +105,9 @@ function draw() {
 	// ============ DRAW GHOST PATH: ============
 	ghost_balls.forEach(g => {
 		g.draw();
-		g.life -= 0.1;
+		g.life -= 0.03;
 
+		// Should be a method on ghost balls:
 		if (g.life < 0.3) {
 			const ind = g.find();
 			ghost_balls.splice(ind, 1);

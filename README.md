@@ -17,3 +17,7 @@ It looks better still with finer-grained data:
 And here's what we're imitating -- we seem to be on the right track:
 
 ![screen shot 2018-09-09 at 6 53 57 pm](https://user-images.githubusercontent.com/29472568/45270313-c7b2a080-b461-11e8-8cf2-b1fa09f4c8f8.png)
+
+All right, we have a *very rough* version:
+
+![](https://media.giphy.com/media/1BfhcCCwxNTbNPiGng/giphy.gif)
