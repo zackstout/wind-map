@@ -32,7 +32,7 @@ function setup() {
 	img = loadImage('images/us-mercator.png');
 
 	// Generate initial balls at every cell:
-	generateBalls();
+	generateBalls(1, 0);
 }
 
 
@@ -67,10 +67,23 @@ function draw() {
 	// 	});
 	// }
 
-
 	// Very crude:
 	// balls.push(new Ball(100 + random(600), random(400)));
 
+
+	if (count % 7 === 0) {
+		generateBalls(3, Math.random() * 50);
+	}
+
+	if (count % 30 === 0) {
+		generateBalls(2, Math.random() * 50 - 100);
+	}
+
+	// if (count % 17 === 0) {
+	// 	generateBalls(2, 3.2);
+	// }
+
+	let temp = [];
 
 	// ============ ANIMATE BALLS: ============
 	balls.forEach(b => {
@@ -79,19 +92,28 @@ function draw() {
 		b.move();
 		b.draw();
 
+		// Prepare to get rid of too-close balls:
+		let allow = true;
+		temp.forEach(t => {
+			if (getDist(t, b) < 1) allow = false;
+		});
+		if (allow) temp.push(b);
+
 		// Add to ghost path:
-		if (count % 10 === 0) {
-			var ghost = new GhostBall(b.x, b.y);
+		if (count % 2 === 0) {
+			const ghost = new GhostBall(b.x, b.y);
 			ghost_balls.push(ghost);
 		}
 	});
 
+	balls = temp;
+
 	// ============ DRAW GHOST PATH: ============
 	ghost_balls.forEach(g => {
 		g.draw();
-		g.life -= 0.02;
+		g.life -= 0.1;
 
-		if (g.life < 0) {
+		if (g.life < 0.3) {
 			const ind = g.find();
 			ghost_balls.splice(ind, 1);
 		}

@@ -14,10 +14,10 @@ function getNearestPoint(x, y) {
 	};
 }
 
-function generateBalls() {
-	for (let i=70; i < 120; i++) {
-		for (let j=30; j < 50; j++) {
-			var ball = new Ball(convertLongToPix(i), convertLatToPix(j));
+function generateBalls(range, offset) {
+	for (let i=70; i < 120; i += range) {
+		for (let j=30; j < 50; j+= range) {
+			var ball = new Ball(convertLongToPix(i) + offset, convertLatToPix(j) + offset);
 			balls.push(ball);
 		}
 	}
